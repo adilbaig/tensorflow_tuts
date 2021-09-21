@@ -54,10 +54,22 @@ def plot_value_array(i, predictions_array, true_label):
     thisplot[true_label].set_color('blue')
 
 
-def main():
+def setup_argparse():
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description='Run Image classification. Opetionally export and import models')
+    parser.add_argument('--import-model', type=str,
+                        help='Import a Keras model from this path.')
+    parser.add_argument('--export', type=str,
+                        help='Export a trained model to this path.')
+
+    return parser.parse_args()
+
+
+def main(args):
     fashion_mnist = tf.keras.datasets.fashion_mnist
-    (train_images, train_labels), (test_images,
-                                   test_labels) = fashion_mnist.load_data()
+    (train_images, train_labels), (test_images, test_labels) = fashion_mnist.load_data()
 
     print("train_images.shape", train_images.shape)
     print("test_labels", test_labels)
@@ -67,27 +79,34 @@ def main():
     train_images = train_images / 255.0
     test_images = test_images / 255.0
 
-    # Step2: Build the model
-    model = tf.keras.Sequential([
-        # Transform from 2D to 1D array
-        tf.keras.layers.Flatten(input_shape=(28, 28)),
-        tf.keras.layers.Dense(128, activation='relu'),  # 128 Neurons/Nodes
-        tf.keras.layers.Dense(10),  # 10 Logits
-    ])
+    if not args.import_model:
+      # Step2: Build the model
+      model = tf.keras.Sequential([
+          # Transform from 2D to 1D array
+          tf.keras.layers.Flatten(input_shape=(28, 28)),
+          tf.keras.layers.Dense(128, activation='relu'),  # 128 Neurons/Nodes
+          tf.keras.layers.Dense(10),  # 10 Logits
+      ])
 
-    model.compile(
-        optimizer='adam',
-        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        metrics=['accuracy']
-    )
+      model.compile(
+          optimizer='adam',
+          loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+          metrics=['accuracy']
+      )
 
-    # Step3: Train the neural network
-    model.fit(train_images, train_labels, epochs=10)
+      # Step3: Train the neural network
+      model.fit(train_images, train_labels, epochs=10)
+    else:
+      print("Importing trained model from", args.import_model)
+      model = tf.keras.models.load_model(args.import_model)
 
+    if args.export:
+      print("Saving model to", args.export)
+      model.save(args.export)
+    
     # Step4: Evaluate accuracy
     # test_loss, test_acc = model.evaluate(test_images, test_labels, verbose=2)
-    print('\nTest accuracy:{1}, nTest loss:{0}'.format(
-        *model.evaluate(test_images, test_labels, verbose=2)))
+    print('\nTest accuracy:{1}, nTest loss:{0}'.format(*model.evaluate(test_images, test_labels, verbose=2)))
 
     # Step5: DONE TRAINING! Start making predictions on test images
     # Softmax converts logitcs to probabilities
@@ -99,5 +118,7 @@ def main():
     plot_image(i, predictions[i], test_labels, test_images)
     plt.show()
 
+
 if __name__ == "__main__":
-    main()
+    args = setup_argparse()
+    main(args)
