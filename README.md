@@ -10,3 +10,6 @@ python3 -m pip install -r requirements.txt
 source venv/bin/activate
 python3 classification.py
 ```
+
+## Learning Resources
+- (Machine Learning Crash Course)[https://developers.google.com/machine-learning/crash-course]
